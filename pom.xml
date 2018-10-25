@@ -63,9 +63,26 @@ Sections that did not require modification or management have been removed. Much
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.0</version>
           <configuration>
+            <!-- TODO remove debug symbols from final output? -->
+            <failOnError>true</failOnError>
+            <failOnWarning>true</failOnWarning>
+            <showDeprecation>true</showDeprecation>
+            <showWarnings>true</showWarnings>
             <source>1.10</source>
             <target>1.10</target>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>3.0.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>8.14</version>
+            </dependency>
+          </dependencies>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -79,7 +96,26 @@ Sections that did not require modification or management have been removed. Much
             <goals>
               <goal>check</goal>
             </goals>
+            <!-- Run during validate, not verify. This should fail the
+                 build process as early as possible -->
             <phase>validate</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>checkstyle</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <!-- <configLocation>some classath resource</configLocation> -->
+              <skip>true</skip><!-- TODO turn back on -->
+              <violationSeverity>info</violationSeverity>
+            </configuration>
           </execution>
         </executions>
       </plugin>
