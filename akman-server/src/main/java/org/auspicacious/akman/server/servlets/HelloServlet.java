@@ -1,7 +1,7 @@
 package org.auspicacious.akman.server.servlets;
 
 import java.io.IOException;
-
+import java.nio.charset.StandardCharsets;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
@@ -21,7 +21,7 @@ public class HelloServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         ServletOutputStream out = resp.getOutputStream();
-        out.write("hello heroku".getBytes());
+        out.write("hello heroku".getBytes(StandardCharsets.UTF_8));
         out.flush();
         out.close();
     }

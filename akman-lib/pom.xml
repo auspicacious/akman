@@ -35,5 +35,10 @@
       <version>1.18.2</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_core</artifactId>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 </project>

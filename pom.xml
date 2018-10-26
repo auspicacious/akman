@@ -20,9 +20,20 @@ Sections that did not require modification or management have been removed. Much
   </modules>
 
   <properties>
+    <linkXRef>false</linkXRef><!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.pmd>6.8.0</version.pmd>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_core</artifactId>
+        <version>2.3.2</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
     <pluginManagement>
@@ -69,8 +80,8 @@ Sections that did not require modification or management have been removed. Much
             <failOnWarning>true</failOnWarning>
             <showDeprecation>true</showDeprecation>
             <showWarnings>true</showWarnings>
-            <source>1.10</source>
-            <target>1.10</target>
+            <source>10</source>
+            <target>10</target>
             <!-- The documentation claims that compilerArgs is only
                  used when fork=true. This is not true. Without
                  specifying -Xlint:all here, for instance, several
@@ -89,14 +100,13 @@ Sections that did not require modification or management have been removed. Much
               <arg>-Xdoclint:all</arg>
               <!-- TODO turn checks for missing Javadoc back on. -->
               <arg>-Xdoclint:-missing</arg>
+              <!-- Use Google's ErrorProne static analysis tool. Note
+                   that this implicitly forces all projects to have a
+                   provided-scope dependency on the ErrorProne
+                   processor. -->
+              <arg>-XDcompilePolicy=simple</arg>
+              <arg>-Xplugin:ErrorProne</arg>
             </compilerArgs>
-            <annotationProcessorPaths>
-              <path>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_core</artifactId>
-                <version>2.3.2</version>
-              </path>
-            </annotationProcessorPaths>
           </configuration>
         </plugin>
         <plugin>
