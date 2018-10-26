@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
         urlPatterns = {"/hello"}
     )
 public class HelloServlet extends HttpServlet {
+    /** sigh */
+    private static final long serialVersionUID = 1L;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

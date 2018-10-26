@@ -3,6 +3,8 @@ package org.auspicacious.akman.lib.impl;
 import org.bouncycastle.cms.CMSSignedData;
 import org.testng.annotations.Test;
 import org.testng.Assert;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 /**
  * Static data for these tests (certificates, signed texts, etc.) is
@@ -13,6 +15,10 @@ import org.testng.Assert;
 public class OfflineSignatureVerifierTest {
     @Test
     public void testVerifyCMS() throws Exception {
+        // byte[] pembytes = Files.readAllBytes(Paths.get("/home/at/projects/code/openvpn2018/ca/intermediate/testmessage.txt.pem"));
+        // CMSSignedData data = new CMSSignedData(pembytes);
+        // OfflineSignatureVerifier verifier = new OfflineSignatureVerifier();
+        // verifier.verifyCMS(data);
         Assert.assertEquals("a", "a");
     }
 }

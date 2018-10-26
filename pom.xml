@@ -71,6 +71,32 @@ Sections that did not require modification or management have been removed. Much
             <showWarnings>true</showWarnings>
             <source>1.10</source>
             <target>1.10</target>
+            <!-- The documentation claims that compilerArgs is only
+                 used when fork=true. This is not true. Without
+                 specifying -Xlint:all here, for instance, several
+                 warnings will not be generated, even though we are
+                 not using the forking compiler. -->
+            <compilerArgs>
+              <!-- TODO is it possible to write bellwether classes to
+                   detect if any of these settings break? In other
+                   words, classes that should cause errors but
+                   aren't. -->
+              <arg>-Xlint:all</arg>
+              <!-- Can't check for compile-time processing of
+                   annotations since many annotations are not
+                   processed at compile time. -->
+              <arg>-Xlint:-processing</arg>
+              <arg>-Xdoclint:all</arg>
+              <!-- TODO turn checks for missing Javadoc back on. -->
+              <arg>-Xdoclint:-missing</arg>
+            </compilerArgs>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>2.3.2</version>
+              </path>
+            </annotationProcessorPaths>
           </configuration>
         </plugin>
         <plugin>
