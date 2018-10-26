@@ -5,7 +5,9 @@ import java.security.Security;
 import javax.crypto.Cipher;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.security.Provider;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class EnvironmentVerifierImpl {
     public boolean verify() {
         // https://wiki.apache.org/commons/Logging/StaticLog
@@ -15,11 +17,12 @@ public class EnvironmentVerifierImpl {
             Security.addProvider(new BouncyCastleProvider());
         }
 
+        StringBuilder s = new StringBuilder();
         for (Provider provider : Security.getProviders()) {
-            System.out.print(provider.getName());
-            System.out.print(": ");
-            System.out.print(provider.getInfo());
-            System.out.println();
+            s.append(provider.getName());
+            s.append(": ");
+            s.append(provider.getInfo());
+            s.append(System.lineSeparator());
             for (Object entryObj : provider.keySet()) {
                 String entry = (String) entryObj;
                 boolean isAlias = false;
@@ -30,13 +33,22 @@ public class EnvironmentVerifierImpl {
                 String serviceName = entry.substring(0, entry.indexOf('.'));
                 String name = entry.substring(serviceName.length() + 1);
                 if (isAlias) {
-                    System.out.print(serviceName + ": " + name);
-                    System.out.println(" (alias for " + provider.get("Alg.Alias." + entry) + ")");
+                    s.append(serviceName);
+                    s.append(": ");
+                    s.append(name);
+                    s.append(" (alias for ");
+                    s.append(provider.get("Alg.Alias." + entry));
+                    s.append(")");
+                    s.append(System.lineSeparator());
                 } else {
-                    System.out.println(serviceName + ": " + name);
+                    s.append(serviceName);
+                    s.append(": ");
+                    s.append(name);
+                    s.append(System.lineSeparator());
                 }
             }
         }
+        log.info(s.toString());
 
         try {
             return Cipher.getMaxAllowedKeyLength("AES") >= 256;

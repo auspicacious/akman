@@ -32,13 +32,28 @@ Sections that did not require modification or management have been removed. Much
         <artifactId>error_prone_core</artifactId>
         <version>2.3.2</version>
       </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.7.25</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.2.3</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <build>
     <pluginManagement>
       <plugins>
-        <!-- Redefine versions for these plugins away from what's listed in the Super POM to avoid problems -->
+        <!-- Redefine versions for these plugins away from what's
+             listed in the Super POM to avoid problems. That being
+             said I'm not sure why common plugins like Surefire aren't
+             in the super POM, as Maven does not seem to be
+             complaining about lack of version number for those (until
+             I redefined them below). -->
         <plugin>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>1.8</version>
@@ -105,8 +120,25 @@ Sections that did not require modification or management have been removed. Much
                    provided-scope dependency on the ErrorProne
                    processor. -->
               <arg>-XDcompilePolicy=simple</arg>
-              <arg>-Xplugin:ErrorProne</arg>
+              <!-- The ParameterName rule is not compatible with
+                   Lombok, see
+                   https://github.com/google/error-prone/issues/780
+                   -->
+              <arg>-Xplugin:ErrorProne -Xep:ParameterName:OFF</arg>
             </compilerArgs>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.22.1</version>
+          <configuration>
+            <systemPropertyVariables>
+              <project.build.directory>${project.build.directory}</project.build.directory>
+            </systemPropertyVariables>
+            <parallel>true</parallel>
+            <runOrder>random</runOrder>
+            <trimStackTrace>false</trimStackTrace>
           </configuration>
         </plugin>
         <plugin>
@@ -246,6 +278,9 @@ Sections that did not require modification or management have been removed. Much
           </execution>
         </executions>
       </plugin>
+      <!-- TODO consider integration with https://fbinfer.com/
+           somehow. This tool is not native Java and must be invoked
+           from the command-line. -->
     </plugins>
   </build>
 

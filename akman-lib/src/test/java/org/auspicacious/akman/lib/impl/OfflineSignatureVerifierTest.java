@@ -15,6 +15,7 @@ import java.nio.file.Files;
 public class OfflineSignatureVerifierTest {
     @Test
     public void testVerifyCMS() throws Exception {
+        new EnvironmentVerifierImpl().verify();
         // byte[] pembytes = Files.readAllBytes(Paths.get("/home/at/projects/code/openvpn2018/ca/intermediate/testmessage.txt.pem"));
         // CMSSignedData data = new CMSSignedData(pembytes);
         // OfflineSignatureVerifier verifier = new OfflineSignatureVerifier();
