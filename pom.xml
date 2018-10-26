@@ -21,6 +21,7 @@ Sections that did not require modification or management have been removed. Much
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <version.pmd>6.8.0</version.pmd>
   </properties>
 
   <build>
@@ -84,6 +85,64 @@ Sections that did not require modification or management have been removed. Much
             </dependency>
           </dependencies>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>3.10.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>net.sourceforge.pmd</groupId>
+              <artifactId>pmd-core</artifactId>
+              <version>${version.pmd}</version>
+            </dependency>
+            <dependency>
+              <groupId>net.sourceforge.pmd</groupId>
+              <artifactId>pmd-java</artifactId>
+              <version>${version.pmd}</version>
+            </dependency>
+            <dependency>
+              <groupId>net.sourceforge.pmd</groupId>
+              <artifactId>pmd-javascript</artifactId>
+              <version>${version.pmd}</version>
+            </dependency>
+            <dependency>
+              <groupId>net.sourceforge.pmd</groupId>
+              <artifactId>pmd-jsp</artifactId>
+              <version>${version.pmd}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>3.1.7</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.github.spotbugs</groupId>
+              <artifactId>spotbugs</artifactId>
+              <version>3.1.8</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <debug>true</debug>
+            <effort>max</effort>
+            <threshold>low</threshold>
+            <failOnError>true</failOnError>
+            <skip>true</skip><!-- TODO turn back on and verify that plugins are also working -->
+            <plugins>
+              <plugin>
+                <groupId>com.h3xstream.findsecbugs</groupId>
+                <artifactId>findsecbugs-plugin</artifactId>
+                <version>1.8.0</version>
+              </plugin>
+              <plugin>
+                <groupId>com.mebigfatguy.fb-contrib</groupId>
+                <artifactId>fb-contrib</artifactId>
+                <version>7.4.3.sb</version>
+              </plugin>
+            </plugins>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -116,6 +175,38 @@ Sections that did not require modification or management have been removed. Much
               <skip>true</skip><!-- TODO turn back on -->
               <violationSeverity>info</violationSeverity>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- TODO set up namespacing rules for all IDs to avoid collisions or accidental overrides -->
+            <id>pmd</id>
+            <goals>
+              <goal>check</goal>
+              <goal>cpd-check</goal>
+            </goals>
+            <configuration>
+              <failOnViolation>true</failOnViolation>
+              <failurePriority>5</failurePriority>
+              <verbose>true</verbose>
+              <skip>true</skip><!-- TODO turn back on -->
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>spotbugs</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
