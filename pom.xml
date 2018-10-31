@@ -139,6 +139,8 @@ Sections that did not require modification or management have been removed. Much
                    Lombok, see
                    https://github.com/google/error-prone/issues/780
               -->
+              <!-- TODO determine if this modifies compiler output in
+                   any way, at least by checking bytecode output -->
               <arg>-Xplugin:ErrorProne -Xep:ParameterName:OFF</arg>
             </compilerArgs>
           </configuration>
@@ -152,6 +154,9 @@ Sections that did not require modification or management have been removed. Much
               <!-- This is used by logback test configurations. -->
               <project.build.directory>${project.build.directory}</project.build.directory>
             </systemPropertyVariables>
+            <!-- TODO check to see if this problem is fixed -->
+            <!-- https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=911925 -->
+            <useSystemClassLoader>false</useSystemClassLoader>
             <parallel>true</parallel>
             <runOrder>random</runOrder>
             <trimStackTrace>false</trimStackTrace>
@@ -350,6 +355,12 @@ Sections that did not require modification or management have been removed. Much
                    works. Understand why and figure out how to fix
                    it. -->
               <includePomProjects>true</includePomProjects>
+              <ignoredClassPatterns>
+                <ignoredClassPattern>org.checkerframework.dataflow.qual.Deterministic</ignoredClassPattern>
+                <ignoredClassPattern>org.checkerframework.dataflow.qual.Pure</ignoredClassPattern>
+                <ignoredClassPattern>org.checkerframework.dataflow.qual.SideEffectFree</ignoredClassPattern>
+                <ignoredClassPattern>org.checkerframework.dataflow.qual.TerminatesExecution</ignoredClassPattern>
+              </ignoredClassPatterns>
             </configuration>
           </execution>
         </executions>
@@ -365,6 +376,11 @@ Sections that did not require modification or management have been removed. Much
             </goals>
             <configuration>
               <failOnWarning>true</failOnWarning>
+              <ignoredUnusedDeclaredDependencies>
+                <ignoredUnusedDeclaredDependency>ch.qos.logback:logback-classic:jar</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>com.google.errorprone:error_prone_core:jar</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>org.projectlombok:lombok:jar</ignoredUnusedDeclaredDependency>
+              </ignoredUnusedDeclaredDependencies>
             </configuration>
           </execution>
         </executions>
