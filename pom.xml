@@ -33,6 +33,21 @@ Sections that did not require modification or management have been removed. Much
         <version>2.3.2</version>
       </dependency>
       <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>3.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.checkerframework</groupId>
+        <artifactId>checker-qual</artifactId>
+        <version>2.5.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.errorprone</groupId>
+        <artifactId>error_prone_annotations</artifactId>
+        <version>2.3.2</version>
+      </dependency>
+      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>1.7.25</version>
@@ -123,7 +138,7 @@ Sections that did not require modification or management have been removed. Much
               <!-- The ParameterName rule is not compatible with
                    Lombok, see
                    https://github.com/google/error-prone/issues/780
-                   -->
+              -->
               <arg>-Xplugin:ErrorProne -Xep:ParameterName:OFF</arg>
             </compilerArgs>
           </configuration>
@@ -134,6 +149,7 @@ Sections that did not require modification or management have been removed. Much
           <version>2.22.1</version>
           <configuration>
             <systemPropertyVariables>
+              <!-- This is used by logback test configurations. -->
               <project.build.directory>${project.build.directory}</project.build.directory>
             </systemPropertyVariables>
             <parallel>true</parallel>
@@ -211,6 +227,11 @@ Sections that did not require modification or management have been removed. Much
             </plugins>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.basepom.maven</groupId>
+          <artifactId>duplicate-finder-maven-plugin</artifactId>
+          <version>1.3.0</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -281,6 +302,73 @@ Sections that did not require modification or management have been removed. Much
       <!-- TODO consider integration with https://fbinfer.com/
            somehow. This tool is not native Java and must be invoked
            from the command-line. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <banDuplicatePomDependencyVersions />
+                <dependencyConvergence>
+                  <uniqueVersions>true</uniqueVersions>
+                </dependencyConvergence>
+                <reactorModuleConvergence />
+                <requireJavaVersion>
+                  <version>10.0.2</version>
+                </requireJavaVersion>
+                <requireMavenVersion>
+                  <version>3.5.4</version>
+                </requireMavenVersion>
+                <requireUpperBoundDeps />
+                <!-- TODO require release versions during release -->
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.basepom.maven</groupId>
+        <artifactId>duplicate-finder-maven-plugin</artifactId>
+        <version>1.3.0</version>
+        <executions>
+          <execution>
+            <id>duplicate-finder</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <failBuildInCaseOfDifferentContentConflict>true</failBuildInCaseOfDifferentContentConflict>
+              <failBuildInCaseOfEqualContentConflict>true</failBuildInCaseOfEqualContentConflict>
+              <printEqualFiles>true</printEqualFiles>
+              <!-- TODO includeBootClasspath no longer
+                   works. Understand why and figure out how to fix
+                   it. -->
+              <includePomProjects>true</includePomProjects>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>dependency-plugin</id>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+            <configuration>
+              <failOnWarning>true</failOnWarning>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
