@@ -356,10 +356,10 @@ Sections that did not require modification or management have been removed. Much
                    it. -->
               <includePomProjects>true</includePomProjects>
               <ignoredClassPatterns>
-                <ignoredClassPattern>org.checkerframework.dataflow.qual.Deterministic</ignoredClassPattern>
-                <ignoredClassPattern>org.checkerframework.dataflow.qual.Pure</ignoredClassPattern>
-                <ignoredClassPattern>org.checkerframework.dataflow.qual.SideEffectFree</ignoredClassPattern>
-                <ignoredClassPattern>org.checkerframework.dataflow.qual.TerminatesExecution</ignoredClassPattern>
+                <ignoredClassPattern>^org.checkerframework.dataflow.qual.Deterministic$</ignoredClassPattern>
+                <ignoredClassPattern>^org.checkerframework.dataflow.qual.Pure$</ignoredClassPattern>
+                <ignoredClassPattern>^org.checkerframework.dataflow.qual.SideEffectFree$</ignoredClassPattern>
+                <ignoredClassPattern>^org.checkerframework.dataflow.qual.TerminatesExecution$</ignoredClassPattern>
               </ignoredClassPatterns>
             </configuration>
           </execution>

@@ -27,7 +27,7 @@ public class UserCertificateValidator {
             if (pemObject == null) {
                 break;
             }
-            System.out.println(new String(pemObject.getContent(), StandardCharsets.UTF_8));
+            certHolderList.add(new X509CertificateHolder(pemObject.getContent()));
         }
         return certHolderList;
     }
