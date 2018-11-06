@@ -322,7 +322,7 @@ Sections that did not require modification or management have been removed. Much
                 <dependencyConvergence>
                   <uniqueVersions>true</uniqueVersions>
                 </dependencyConvergence>
-                <reactorModuleConvergence />
+                <!-- <reactorModuleConvergence /> TODO figure out how to apply this -->
                 <requireJavaVersion>
                   <version>10.0.2</version>
                 </requireJavaVersion>
