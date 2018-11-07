@@ -26,7 +26,8 @@ public class DefaultCertificateValidatorTest {
 
         final X509CertSelector trustRootSelector = new X509CertSelector();
         trustRootSelector.setSerialNumber(new BigInteger("82981b9f84207540", 16));
-        // trustRootSelector.setSubject(new X500Principal("C=US,ST=Nowhere,L=Notown,O=Yoyodyne Propulsion Systems,CN=rootca"));
-        new DefaultCertificateValidator(caFiles, trustRootSelector);
+        final X509CertSelector intermediateSelector = new X509CertSelector();
+        intermediateSelector.setSerialNumber(new BigInteger("1000", 16));
+        new DefaultCertificateValidator(caFiles, trustRootSelector, intermediateSelector);
     }
 }
