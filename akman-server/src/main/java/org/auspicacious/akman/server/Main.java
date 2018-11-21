@@ -40,7 +40,6 @@ public class Main {
    * @throws Exception this is the entry point to the application.
    */
   public static void main(String[] args) throws Exception {
-
     System.setProperty("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE", "true");
 
     Tomcat tomcat = new Tomcat();
