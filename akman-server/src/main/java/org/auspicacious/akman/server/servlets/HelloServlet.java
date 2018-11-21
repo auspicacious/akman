@@ -9,21 +9,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(
-        name = "MyServlet", 
-        urlPatterns = {"/hello"}
-    )
+@WebServlet(name = "MyServlet", urlPatterns = {"/hello"})
 public class HelloServlet extends HttpServlet {
-    /** sigh */
-    private static final long serialVersionUID = 1L;
+  // sigh
+  private static final long serialVersionUID = 1L;
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        ServletOutputStream out = resp.getOutputStream();
-        out.write("hello heroku".getBytes(StandardCharsets.UTF_8));
-        out.flush();
-        out.close();
-    }
-    
+  @Override
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+    ServletOutputStream out = resp.getOutputStream();
+    out.write("hello heroku".getBytes(StandardCharsets.UTF_8));
+    out.flush();
+    out.close();
+  }
 }

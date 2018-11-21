@@ -7,5 +7,11 @@ import org.bouncycastle.cert.X509CertificateHolder;
  * certification rules will depend on the implementation.
  */
 public interface CertificateValidator {
-    boolean validate(X509CertificateHolder cert);
+  /**
+   * Indicate whether the given certificate is considered valid.
+   *
+   * @return true, if the certificate is valid according to the rules
+   *     of the validator in use. Otherwise false.
+   */
+  boolean validate(X509CertificateHolder cert);
 }
