@@ -110,8 +110,8 @@ Sections that did not require modification or management have been removed. Much
             <failOnWarning>true</failOnWarning>
             <showDeprecation>true</showDeprecation>
             <showWarnings>true</showWarnings>
-            <source>10</source>
-            <target>10</target>
+            <source>11</source>
+            <target>11</target>
             <!-- The documentation claims that compilerArgs is only
                  used when fork=true. This is not true. Without
                  specifying -Xlint:all here, for instance, several
@@ -324,7 +324,7 @@ Sections that did not require modification or management have been removed. Much
                 </dependencyConvergence>
                 <!-- <reactorModuleConvergence /> TODO figure out how to apply this -->
                 <requireJavaVersion>
-                  <version>10.0.2</version>
+                  <version>11.0.1</version>
                 </requireJavaVersion>
                 <requireMavenVersion>
                   <version>3.5.4</version>
@@ -384,6 +384,16 @@ Sections that did not require modification or management have been removed. Much
             </configuration>
           </execution>
         </executions>
+        <dependencies>
+          <!-- TODO remove this dependency once a new version of
+               maven-dependency-plugin is released that supports Java
+               11 -->
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>7.0</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
