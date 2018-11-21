@@ -388,6 +388,7 @@ Sections that did not require modification or management have been removed. Much
           <!-- TODO remove this dependency once a new version of
                maven-dependency-plugin is released that supports Java
                11 -->
+          <!-- https://issues.apache.org/jira/browse/MDEP-613 -->
           <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
