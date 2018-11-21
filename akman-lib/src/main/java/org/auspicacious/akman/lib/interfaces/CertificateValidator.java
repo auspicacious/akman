@@ -7,5 +7,5 @@ import org.bouncycastle.cert.X509CertificateHolder;
  * certification rules will depend on the implementation.
  */
 public interface CertificateValidator {
-    public boolean validate(X509CertificateHolder cert);
+    boolean validate(X509CertificateHolder cert);
 }

@@ -24,7 +24,6 @@ import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +59,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
 
     @Override
     public boolean validate(final X509CertificateHolder cert) {
-        return false;
+        return certPath.equals(new Object());
     }
 
     private static CertPath createCertPath(Collection<X509CertificateHolder> trustedCertHolders, final CertSelector trustRootSelector, final CertSelector intermediateSelector) {
@@ -147,8 +146,8 @@ public class DefaultCertificateValidator implements CertificateValidator {
         }
         final List<X509CertificateHolder> certHolderList = new ArrayList<>();
         try (
-             final Reader fileReader = Files.newBufferedReader(caFile);
-             final PemReader pemReader = new PemReader(fileReader)
+             Reader fileReader = Files.newBufferedReader(caFile);
+             PemReader pemReader = new PemReader(fileReader)
              ) {
             while (true) {
                 final PemObject pemObject = pemReader.readPemObject();

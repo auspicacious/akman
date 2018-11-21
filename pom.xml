@@ -22,7 +22,7 @@ Sections that did not require modification or management have been removed. Much
   <properties>
     <linkXRef>false</linkXRef><!-- https://stackoverflow.com/questions/12038238/unable-to-locate-source-xref-to-link-to -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <version.pmd>6.8.0</version.pmd>
+    <version.pmd>6.9.0</version.pmd>
   </properties>
 
   <dependencyManagement>
@@ -154,9 +154,6 @@ Sections that did not require modification or management have been removed. Much
               <!-- This is used by logback test configurations. -->
               <project.build.directory>${project.build.directory}</project.build.directory>
             </systemPropertyVariables>
-            <!-- TODO check to see if this problem is fixed -->
-            <!-- https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=911925 -->
-            <useSystemClassLoader>false</useSystemClassLoader>
             <parallel>true</parallel>
             <runOrder>random</runOrder>
             <trimStackTrace>false</trimStackTrace>
@@ -287,7 +284,6 @@ Sections that did not require modification or management have been removed. Much
               <failOnViolation>true</failOnViolation>
               <failurePriority>5</failurePriority>
               <verbose>true</verbose>
-              <skip>true</skip><!-- TODO turn back on -->
             </configuration>
           </execution>
         </executions>
