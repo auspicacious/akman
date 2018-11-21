@@ -35,7 +35,7 @@ Sections that did not require modification or management have been removed. Much
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
-        <version>3.0.0</version>
+        <version>3.0.2</version>
       </dependency>
       <dependency>
         <groupId>org.checkerframework</groupId>
@@ -56,6 +56,11 @@ Sections that did not require modification or management have been removed. Much
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>1.2.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-annotations</artifactId>
+        <version>3.1.8</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -212,9 +217,9 @@ Sections that did not require modification or management have been removed. Much
           <configuration>
             <debug>true</debug>
             <effort>max</effort>
+            <excludeFilterFile>${maven.multiModuleProjectDirectory}/spotbugs-exclude.xml</excludeFilterFile>
             <threshold>low</threshold>
             <failOnError>true</failOnError>
-            <skip>true</skip><!-- TODO turn back on and verify that plugins are also working -->
             <plugins>
               <plugin>
                 <groupId>com.h3xstream.findsecbugs</groupId>

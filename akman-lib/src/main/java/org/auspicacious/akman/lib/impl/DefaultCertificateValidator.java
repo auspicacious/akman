@@ -1,5 +1,6 @@
 package org.auspicacious.akman.lib.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.FileVisitOption;
@@ -124,6 +125,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
         return certs.iterator().next();
     }
     
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     private static Collection<X509CertificateHolder> loadCAs(final Path caFileOrDir) {
         if (Files.isRegularFile(caFileOrDir)) {
             return loadCAFile(caFileOrDir);
@@ -157,7 +159,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
                 certHolderList.add(new X509CertificateHolder(pemObject.getContent()));
             }
         } catch (IOException e) {
-            throw new RuntimeException();
+            throw new RuntimeException("An error occurred while parsing the CA file.", e);
         }
         return certHolderList;
     }

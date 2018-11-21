@@ -38,7 +38,7 @@ public class EnvironmentVerifierImpl {
                     s.append(name);
                     s.append(" (alias for ");
                     s.append(provider.get("Alg.Alias." + entry));
-                    s.append(")");
+                    s.append(')');
                     s.append(System.lineSeparator());
                 } else {
                     s.append(serviceName);
