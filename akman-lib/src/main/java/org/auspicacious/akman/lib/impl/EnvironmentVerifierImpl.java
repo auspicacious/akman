@@ -9,12 +9,15 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Slf4j
 public class EnvironmentVerifierImpl {
+  private static final int MIN_AES_STRENGTH = 256;
+
   /**
    * Verify that the JVM environment is sufficient for running this
    * application. Should only be executed once at startup.
    *
    * @return true if the environment is capable, false otherwise.
    */
+  @SuppressWarnings("checkstyle:multiplestringliterals")
   public boolean verify() {
     // https://wiki.apache.org/commons/Logging/StaticLog
     // TODO this shouldn't be called a verifier if it has side effects
@@ -57,7 +60,7 @@ public class EnvironmentVerifierImpl {
     log.info(s.toString());
 
     try {
-      return Cipher.getMaxAllowedKeyLength("AES") >= 256;
+      return Cipher.getMaxAllowedKeyLength("AES") >= MIN_AES_STRENGTH;
     } catch (NoSuchAlgorithmException e) {
       return false;
     }

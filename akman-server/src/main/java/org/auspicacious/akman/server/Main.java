@@ -14,7 +14,12 @@ import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 
 @SuppressFBWarnings("PATH_TRAVERSAL_IN")
+@SuppressWarnings({"checkstyle:multiplestringliterals", "checkstyle:magicnumber"})
 public class Main {
+  private Main() {
+    // do nothing
+  }
+
   private static File getRootFolder() {
     try {
       File root;

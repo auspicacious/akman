@@ -82,6 +82,10 @@ public class DefaultCertificateValidator implements CertificateValidator {
     this.certPath = createCertPath(loadCAs(caFileOrDir), trustRootSelector, intermediateSelector);
   }
 
+  private DefaultCertificateValidator() {
+    this.certPath = null;
+  }
+  
   @Override
   public boolean validate(final X509CertificateHolder cert) {
     return certPath.equals(new Object());
@@ -177,8 +181,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
         throw new RuntimeException("Problem accessing starting file for CA file search.", e);
       }
     } else {
-      throw new IllegalArgumentException("Path "
-                                         + caFileOrDir.toString()
+      throw new IllegalArgumentException(caFileOrDir.toString()
                                          + " is not a regular file or directory and cannot be read."
                                          );
     }
@@ -187,8 +190,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
 
   private static Collection<X509CertificateHolder> loadCAFile(final Path caFile) {
     if (!Files.isRegularFile(caFile)) {
-      throw new IllegalArgumentException("Path "
-                                         + caFile.toString()
+      throw new IllegalArgumentException(caFile.toString()
                                          + " is not a regular file and cannot be read.");
     }
     final List<X509CertificateHolder> certHolderList = new ArrayList<>();
@@ -209,7 +211,4 @@ public class DefaultCertificateValidator implements CertificateValidator {
     return certHolderList;
   }
 
-  private DefaultCertificateValidator() {
-    this.certPath = null;
-  }
 }
