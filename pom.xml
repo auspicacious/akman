@@ -99,6 +99,13 @@ Sections that did not require modification or management have been removed. Much
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
           <version>3.0.0-M2</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>extra-enforcer-rules</artifactId>
+              <version>1.0-beta-9</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -320,10 +327,17 @@ Sections that did not require modification or management have been removed. Much
             </goals>
             <configuration>
               <rules>
+                <banCircularDependencies />
                 <banDuplicatePomDependencyVersions />
                 <dependencyConvergence>
                   <uniqueVersions>true</uniqueVersions>
                 </dependencyConvergence>
+                <!-- TODO turn this on after support for 11 is added -->
+                <!-- https://github.com/mojohaus/extra-enforcer-rules/pull/63/files-->
+                <!-- <enforceBytecodeVersion> -->
+                <!--   <maxJdkVersion>11</maxJdkVersion> -->
+                <!-- </enforceBytecodeVersion> -->
+                <!-- <requireEncoding /> TODO this doesn't work, often guesses ISO-8859-1 -->
                 <!-- <reactorModuleConvergence /> TODO figure out how to apply this -->
                 <requireJavaVersion>
                   <version>11.0.1</version>
