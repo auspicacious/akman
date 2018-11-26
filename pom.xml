@@ -87,6 +87,17 @@ Sections that did not require modification or management have been removed. Much
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <version>3.1.1</version>
+          <dependencies>
+            <!-- TODO remove this dependency once a new version of
+                 maven-dependency-plugin is released that supports Java
+                 11 -->
+            <!-- https://issues.apache.org/jira/browse/MDEP-613 -->
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm</artifactId>
+              <version>7.0</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -226,25 +237,6 @@ Sections that did not require modification or management have been removed. Much
               <version>3.1.8</version>
             </dependency>
           </dependencies>
-          <configuration>
-            <debug>true</debug>
-            <effort>max</effort>
-            <excludeFilterFile>${maven.multiModuleProjectDirectory}/spotbugs-exclude.xml</excludeFilterFile>
-            <threshold>low</threshold>
-            <failOnError>true</failOnError>
-            <plugins>
-              <plugin>
-                <groupId>com.h3xstream.findsecbugs</groupId>
-                <artifactId>findsecbugs-plugin</artifactId>
-                <version>1.8.0</version>
-              </plugin>
-              <plugin>
-                <groupId>com.mebigfatguy.fb-contrib</groupId>
-                <artifactId>fb-contrib</artifactId>
-                <version>7.4.3.sb</version>
-              </plugin>
-            </plugins>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>org.basepom.maven</groupId>
@@ -253,177 +245,195 @@ Sections that did not require modification or management have been removed. Much
         </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>tidy-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>tidy</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <!-- Run during validate, not verify. This should fail the
-                 build process as early as possible -->
-            <phase>validate</phase>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>checkstyle</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
-              <!-- We should only use levels error and info, warnings
-                   are not helpful -->
-              <violationSeverity>warning</violationSeverity>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-pmd-plugin</artifactId>
-        <executions>
-          <execution>
-            <!-- TODO set up namespacing rules for all Maven execution IDs to avoid collisions or accidental overrides -->
-            <id>pmd</id>
-            <goals>
-              <goal>check</goal>
-              <goal>cpd-check</goal>
-            </goals>
-            <configuration>
-              <failOnViolation>true</failOnViolation>
-              <failurePriority>5</failurePriority>
-              <rulesets>
-                <ruleset>${maven.multiModuleProjectDirectory}/pmd.xml</ruleset>
-              </rulesets>
-              <verbose>true</verbose>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.github.spotbugs</groupId>
-        <artifactId>spotbugs-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>spotbugs</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- TODO consider integration with https://fbinfer.com/
-           somehow. This tool is not native Java and must be invoked
-           from the command-line. -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>enforce</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <banCircularDependencies />
-                <banDuplicatePomDependencyVersions />
-                <dependencyConvergence>
-                  <uniqueVersions>true</uniqueVersions>
-                </dependencyConvergence>
-                <!-- TODO turn this on after support for 11 is added -->
-                <!-- https://github.com/mojohaus/extra-enforcer-rules/pull/63/files-->
-                <!-- <enforceBytecodeVersion> -->
-                <!--   <maxJdkVersion>11</maxJdkVersion> -->
-                <!-- </enforceBytecodeVersion> -->
-                <!-- <requireEncoding /> TODO this doesn't work, often guesses ISO-8859-1 -->
-                <!-- <reactorModuleConvergence /> TODO figure out how to apply this -->
-                <requireJavaVersion>
-                  <version>11.0.1</version>
-                </requireJavaVersion>
-                <requireMavenVersion>
-                  <version>3.5.4</version>
-                </requireMavenVersion>
-                <requireUpperBoundDeps />
-                <!-- TODO require release versions during release -->
-              </rules>
-              <fail>true</fail>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.basepom.maven</groupId>
-        <artifactId>duplicate-finder-maven-plugin</artifactId>
-        <version>1.3.0</version>
-        <executions>
-          <execution>
-            <id>duplicate-finder</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <failBuildInCaseOfDifferentContentConflict>true</failBuildInCaseOfDifferentContentConflict>
-              <failBuildInCaseOfEqualContentConflict>true</failBuildInCaseOfEqualContentConflict>
-              <printEqualFiles>true</printEqualFiles>
-              <!-- TODO includeBootClasspath no longer
-                   works. Understand why and figure out how to fix
-                   it. -->
-              <includePomProjects>true</includePomProjects>
-              <ignoredClassPatterns>
-                <ignoredClassPattern>^org.checkerframework.dataflow.qual.Deterministic$</ignoredClassPattern>
-                <ignoredClassPattern>^org.checkerframework.dataflow.qual.Pure$</ignoredClassPattern>
-                <ignoredClassPattern>^org.checkerframework.dataflow.qual.SideEffectFree$</ignoredClassPattern>
-                <ignoredClassPattern>^org.checkerframework.dataflow.qual.TerminatesExecution$</ignoredClassPattern>
-              </ignoredClassPatterns>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>dependency-plugin</id>
-            <goals>
-              <goal>analyze-only</goal>
-            </goals>
-            <configuration>
-              <failOnWarning>true</failOnWarning>
-              <ignoredUnusedDeclaredDependencies>
-                <ignoredUnusedDeclaredDependency>ch.qos.logback:logback-classic:jar</ignoredUnusedDeclaredDependency>
-                <ignoredUnusedDeclaredDependency>com.google.errorprone:error_prone_core:jar</ignoredUnusedDeclaredDependency>
-                <ignoredUnusedDeclaredDependency>org.projectlombok:lombok:jar</ignoredUnusedDeclaredDependency>
-              </ignoredUnusedDeclaredDependencies>
-            </configuration>
-          </execution>
-        </executions>
-        <dependencies>
-          <!-- TODO remove this dependency once a new version of
-               maven-dependency-plugin is released that supports Java
-               11 -->
-          <!-- https://issues.apache.org/jira/browse/MDEP-613 -->
-          <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>7.0</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-    </plugins>
   </build>
 
   <profiles>
+    <profile>
+      <id>safeties</id>
+      <activation>
+        <property>
+          <name>!disableSafeties</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>tidy-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>tidy</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <!-- Run during validate, not verify. This should fail the
+                     build process as early as possible -->
+                <phase>validate</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>checkstyle</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
+                  <!-- We should only use levels error and info, warnings
+                       are not helpful -->
+                  <violationSeverity>warning</violationSeverity>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-pmd-plugin</artifactId>
+            <executions>
+              <execution>
+                <!-- TODO set up namespacing rules for all Maven execution IDs to avoid collisions or accidental overrides -->
+                <id>pmd</id>
+                <goals>
+                  <goal>check</goal>
+                  <goal>cpd-check</goal>
+                </goals>
+                <configuration>
+                  <failOnViolation>true</failOnViolation>
+                  <failurePriority>5</failurePriority>
+                  <rulesets>
+                    <ruleset>${maven.multiModuleProjectDirectory}/pmd.xml</ruleset>
+                  </rulesets>
+                  <verbose>true</verbose>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>spotbugs</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <debug>true</debug>
+                  <effort>max</effort>
+                  <excludeFilterFile>${maven.multiModuleProjectDirectory}/spotbugs-exclude.xml</excludeFilterFile>
+                  <threshold>low</threshold>
+                  <failOnError>true</failOnError>
+                  <plugins>
+                    <plugin>
+                      <groupId>com.h3xstream.findsecbugs</groupId>
+                      <artifactId>findsecbugs-plugin</artifactId>
+                      <version>1.8.0</version>
+                    </plugin>
+                    <plugin>
+                      <groupId>com.mebigfatguy.fb-contrib</groupId>
+                      <artifactId>fb-contrib</artifactId>
+                      <version>7.4.3.sb</version>
+                    </plugin>
+                  </plugins>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- TODO consider integration with https://fbinfer.com/
+               somehow. This tool is not native Java and must be invoked
+               from the command-line. -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>enforce</id>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
+                <configuration>
+                  <rules>
+                    <banCircularDependencies />
+                    <banDuplicatePomDependencyVersions />
+                    <dependencyConvergence>
+                      <uniqueVersions>true</uniqueVersions>
+                    </dependencyConvergence>
+                    <!-- TODO turn this on after support for 11 is added -->
+                    <!-- https://github.com/mojohaus/extra-enforcer-rules/pull/63/files-->
+                    <!-- <enforceBytecodeVersion> -->
+                    <!--   <maxJdkVersion>11</maxJdkVersion> -->
+                    <!-- </enforceBytecodeVersion> -->
+                    <!-- <requireEncoding /> TODO this doesn't work, often guesses ISO-8859-1 -->
+                    <!-- <reactorModuleConvergence /> TODO figure out how to apply this -->
+                    <requireJavaVersion>
+                      <version>11.0.1</version>
+                    </requireJavaVersion>
+                    <requireMavenVersion>
+                      <version>3.5.4</version>
+                    </requireMavenVersion>
+                    <requireUpperBoundDeps />
+                    <!-- TODO require release versions during release -->
+                  </rules>
+                  <fail>true</fail>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.basepom.maven</groupId>
+            <artifactId>duplicate-finder-maven-plugin</artifactId>
+            <version>1.3.0</version>
+            <executions>
+              <execution>
+                <id>duplicate-finder</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <failBuildInCaseOfDifferentContentConflict>true</failBuildInCaseOfDifferentContentConflict>
+                  <failBuildInCaseOfEqualContentConflict>true</failBuildInCaseOfEqualContentConflict>
+                  <printEqualFiles>true</printEqualFiles>
+                  <!-- TODO includeBootClasspath no longer
+                       works. Understand why and figure out how to fix
+                       it. -->
+                  <includePomProjects>true</includePomProjects>
+                  <ignoredClassPatterns>
+                    <ignoredClassPattern>^org.checkerframework.dataflow.qual.Deterministic$</ignoredClassPattern>
+                    <ignoredClassPattern>^org.checkerframework.dataflow.qual.Pure$</ignoredClassPattern>
+                    <ignoredClassPattern>^org.checkerframework.dataflow.qual.SideEffectFree$</ignoredClassPattern>
+                    <ignoredClassPattern>^org.checkerframework.dataflow.qual.TerminatesExecution$</ignoredClassPattern>
+                  </ignoredClassPatterns>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>dependency-plugin</id>
+                <goals>
+                  <goal>analyze-only</goal>
+                </goals>
+                <configuration>
+                  <failOnWarning>true</failOnWarning>
+                  <ignoredUnusedDeclaredDependencies>
+                    <ignoredUnusedDeclaredDependency>ch.qos.logback:logback-classic:jar</ignoredUnusedDeclaredDependency>
+                    <ignoredUnusedDeclaredDependency>com.google.errorprone:error_prone_core:jar</ignoredUnusedDeclaredDependency>
+                    <ignoredUnusedDeclaredDependency>org.projectlombok:lombok:jar</ignoredUnusedDeclaredDependency>
+                  </ignoredUnusedDeclaredDependencies>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <!-- The release profile will be removed from future versions of
          the super POM. Therefore it is overwritten here to always
          fail if anyone tries to use it. -->
