@@ -26,21 +26,21 @@ public class EnvironmentVerifierImpl {
       Security.addProvider(new BouncyCastleProvider());
     }
 
-    StringBuilder s = new StringBuilder();
-    for (Provider provider : Security.getProviders()) {
+    final StringBuilder s = new StringBuilder();
+    for (final Provider provider : Security.getProviders()) {
       s.append(provider.getName());
       s.append(": ");
       s.append(provider.getInfo());
       s.append(System.lineSeparator());
-      for (Object entryObj : provider.keySet()) {
+      for (final Object entryObj : provider.keySet()) {
         String entry = (String) entryObj;
         boolean isAlias = false;
         if (entry.startsWith("Alg.Alias")) {
           isAlias = true;
           entry = entry.substring("Alg.Alias".length() + 1);
         }
-        String serviceName = entry.substring(0, entry.indexOf('.'));
-        String name = entry.substring(serviceName.length() + 1);
+        final String serviceName = entry.substring(0, entry.indexOf('.'));
+        final String name = entry.substring(serviceName.length() + 1);
         if (isAlias) {
           s.append(serviceName);
           s.append(": ");

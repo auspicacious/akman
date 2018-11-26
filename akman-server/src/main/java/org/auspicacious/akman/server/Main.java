@@ -14,19 +14,24 @@ import org.apache.catalina.webresources.EmptyResourceSet;
 import org.apache.catalina.webresources.StandardRoot;
 
 @SuppressFBWarnings("PATH_TRAVERSAL_IN")
-@SuppressWarnings({"checkstyle:multiplestringliterals", "checkstyle:magicnumber"})
-public class Main {
+@SuppressWarnings({"checkstyle:multiplestringliterals",
+      "checkstyle:magicnumber",
+      "PMD.ShortClassName",
+      "PMD.SignatureDeclareThrowsException",
+      "PMD.SystemPrintln",})
+public final class Main {
   private Main() {
     // do nothing
   }
 
+  @SuppressWarnings({"PMD.AvoidThrowingRawExceptionTypes",})
   private static File getRootFolder() {
     try {
       File root;
-      String runningJarPath = Main.class.getProtectionDomain()
+      final String runningJarPath = Main.class.getProtectionDomain()
           .getCodeSource().getLocation().toURI().getPath()
           .replaceAll("\\\\", "/");
-      int lastIndexOf = runningJarPath.lastIndexOf("/target/");
+      final int lastIndexOf = runningJarPath.lastIndexOf("/target/");
       if (lastIndexOf < 0) {
         root = new File("");
       } else {
@@ -44,33 +49,33 @@ public class Main {
    *
    * @throws Exception this is the entry point to the application.
    */
-  public static void main(String[] args) throws Exception {
+  public static void main(final String[] args) throws Exception {
     System.setProperty("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE", "true");
 
-    Tomcat tomcat = new Tomcat();
+    final Tomcat tomcat = new Tomcat();
     tomcat.getConnector();
-    Path tempPath = Files.createTempDirectory("tomcat-base-dir");
+    final Path tempPath = Files.createTempDirectory("tomcat-base-dir");
     // TODO delete on exit
     tomcat.setBaseDir(tempPath.toString());
     tomcat.setPort(8080);
     // TODO better doc base
 
-    File webContentFolder = Files.createTempDirectory("default-doc-base").toFile();
-    StandardContext ctx =
+    final File webContentFolder = Files.createTempDirectory("default-doc-base").toFile();
+    final StandardContext ctx =
         (StandardContext) tomcat.addWebapp("", webContentFolder.getAbsolutePath());
     // Set execution independent of current thread context classloader
     // (compatibility with exec:java mojo)
-    ctx.setParentClassLoader(Main.class.getClassLoader());
+    ctx.setParentClassLoader(Thread.currentThread().getContextClassLoader());
 
     System.out.println("configuring app with basedir: " + webContentFolder.getAbsolutePath());
 
     // Declare an alternative location for your "WEB-INF/classes" dir
     // Servlet 3.0 annotation will work
-    File root = getRootFolder();
-    File additionWebInfClassesFolder = new File(root.getAbsolutePath(), "target/classes");
-    WebResourceRoot resources = new StandardRoot(ctx);
+    final File root = getRootFolder();
+    final File additionWebInfClassesFolder = new File(root.getAbsolutePath(), "target/classes");
+    final WebResourceRoot resources = new StandardRoot(ctx);
 
-    WebResourceSet resourceSet;
+    final WebResourceSet resourceSet;
     if (additionWebInfClassesFolder.exists()) {
       resourceSet = new DirResourceSet(resources,
                                        "/WEB-INF/classes",

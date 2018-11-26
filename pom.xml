@@ -186,7 +186,7 @@ Sections that did not require modification or management have been removed. Much
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-pmd-plugin</artifactId>
-          <version>3.10.0</version>
+          <version>3.11.0</version>
           <dependencies>
             <dependency>
               <groupId>net.sourceforge.pmd</groupId>
@@ -206,6 +206,11 @@ Sections that did not require modification or management have been removed. Much
             <dependency>
               <groupId>net.sourceforge.pmd</groupId>
               <artifactId>pmd-jsp</artifactId>
+              <version>${version.pmd}</version>
+            </dependency>
+            <dependency>
+              <groupId>net.sourceforge.pmd</groupId>
+              <artifactId>pmd-xml</artifactId>
               <version>${version.pmd}</version>
             </dependency>
           </dependencies>
@@ -287,7 +292,7 @@ Sections that did not require modification or management have been removed. Much
         <artifactId>maven-pmd-plugin</artifactId>
         <executions>
           <execution>
-            <!-- TODO set up namespacing rules for all IDs to avoid collisions or accidental overrides -->
+            <!-- TODO set up namespacing rules for all Maven execution IDs to avoid collisions or accidental overrides -->
             <id>pmd</id>
             <goals>
               <goal>check</goal>
@@ -296,6 +301,9 @@ Sections that did not require modification or management have been removed. Much
             <configuration>
               <failOnViolation>true</failOnViolation>
               <failurePriority>5</failurePriority>
+              <rulesets>
+                <ruleset>${maven.multiModuleProjectDirectory}/pmd.xml</ruleset>
+              </rulesets>
               <verbose>true</verbose>
             </configuration>
           </execution>

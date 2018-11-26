@@ -32,6 +32,11 @@
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.auspicacious.akman</groupId>
+      <artifactId>akman-lib</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>

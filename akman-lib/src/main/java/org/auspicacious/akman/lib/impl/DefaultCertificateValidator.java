@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
 import org.auspicacious.akman.lib.interfaces.CertificateValidator;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
@@ -82,6 +83,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
     this.certPath = createCertPath(loadCAs(caFileOrDir), trustRootSelector, intermediateSelector);
   }
 
+  @SuppressWarnings("PMD.NullAssignment")
   private DefaultCertificateValidator() {
     this.certPath = null;
   }
@@ -94,25 +96,14 @@ public class DefaultCertificateValidator implements CertificateValidator {
   private static CertPath createCertPath(final Collection<X509CertificateHolder> trustedCertHolders,
                                          final CertSelector trustRootSelector,
                                          final CertSelector intermediateSelector) {
-    final JcaX509CertificateConverter certConverter = new JcaX509CertificateConverter()
-        .setProvider(BouncyCastleProvider.PROVIDER_NAME);
-    final Collection<Certificate> certs = new ArrayList<>();
-    try {
-      for (final X509CertificateHolder certHolder : trustedCertHolders) {
-        final X509Certificate cert = certConverter.getCertificate(certHolder);
-        certs.add(cert);
-      }
-    } catch (final CertificateException e) {
-      throw new RuntimeException(
-          "Issue while converting from BouncyCastle to JCE X509Certificate object.", e);
-    }
+    final Collection<Certificate> certs = convertToJCACertificates(trustedCertHolders);
     final CertStore certStore;
     try {
       certStore = CertStore.getInstance("Collection",
                                         new CollectionCertStoreParameters(certs),
                                         BouncyCastleProvider.PROVIDER_NAME);
     } catch (final GeneralSecurityException e) {
-      throw new RuntimeException(
+      throw new AkmanRuntimeException(
           "Problem creating a CertStore. Most likely a problem in the JDK configuration.", e);
     }
 
@@ -124,7 +115,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
     try {
       params = new PKIXBuilderParameters(trustAnchor, intermediateSelector);
     } catch (InvalidAlgorithmParameterException e) {
-      throw new RuntimeException(
+      throw new AkmanRuntimeException(
           "The trustAnchor HashSet was not populated. This should not happen.",
           e);
     }
@@ -137,15 +128,33 @@ public class DefaultCertificateValidator implements CertificateValidator {
                                              BouncyCastleProvider.PROVIDER_NAME)
         .build(params).getCertPath();
     } catch (CertPathBuilderException e) {
-      throw new RuntimeException("Could not generate a certificate validation path.", e);
+      throw new AkmanRuntimeException("Could not generate a certificate validation path.", e);
     } catch (InvalidAlgorithmParameterException
              | NoSuchAlgorithmException
              | NoSuchProviderException e) {
-      throw new RuntimeException("Could not find some component needed to build the certpath.", e);
+      throw new AkmanRuntimeException(
+          "Could not find some component needed to build the certpath.", e);
     }
 
     log.debug("certificate path: {}", certPath);
     return certPath;
+  }
+
+  private static Collection<Certificate> convertToJCACertificates(
+      final Collection<X509CertificateHolder> trustedCertHolders) {
+    final JcaX509CertificateConverter certConverter = new JcaX509CertificateConverter()
+        .setProvider(BouncyCastleProvider.PROVIDER_NAME);
+    final Collection<Certificate> certs = new ArrayList<>();
+    try {
+      for (final X509CertificateHolder certHolder : trustedCertHolders) {
+        final X509Certificate cert = certConverter.getCertificate(certHolder);
+        certs.add(cert);
+      }
+    } catch (final CertificateException e) {
+      throw new AkmanRuntimeException(
+          "Issue while converting from BouncyCastle to JCE X509Certificate object.", e);
+    }
+    return certs;
   }
 
   @SuppressWarnings("unchecked")
@@ -155,12 +164,13 @@ public class DefaultCertificateValidator implements CertificateValidator {
     try {
       certs = (Collection<X509Certificate>) certStore.getCertificates(selector);
     } catch (CertStoreException e) {
-      throw new RuntimeException("An exception occurred while locating one of the certificates.",
-                                 e);
+      throw new AkmanRuntimeException(
+          "An exception occurred while locating one of the certificates.",
+          e);
     }
-    if (certs.size() > 1 || certs.size() < 1) {
+    if (certs.size() > 1) {
       throw new IllegalArgumentException("The selector does not uniquely identify a certificate.");
-    } else if (certs.size() < 1) {
+    } else if (certs.isEmpty()) {
       throw new IllegalArgumentException("The selector did not identify any certificates.");
     }
     return certs.iterator().next();
@@ -178,7 +188,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
                                                   (FileVisitOption) null)) {
         caFileStream.forEach(file -> loadCAFile(file));
       } catch (IOException e) {
-        throw new RuntimeException("Problem accessing starting file for CA file search.", e);
+        throw new AkmanRuntimeException("Problem accessing starting file for CA file search.", e);
       }
     } else {
       throw new IllegalArgumentException(caFileOrDir.toString()
@@ -206,9 +216,8 @@ public class DefaultCertificateValidator implements CertificateValidator {
         certHolderList.add(new X509CertificateHolder(pemObject.getContent()));
       }
     } catch (IOException e) {
-      throw new RuntimeException("An error occurred while parsing the CA file.", e);
+      throw new AkmanRuntimeException("An error occurred while parsing the CA file.", e);
     }
     return certHolderList;
   }
-
 }
