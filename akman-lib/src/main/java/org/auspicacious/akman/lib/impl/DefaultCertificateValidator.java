@@ -169,9 +169,11 @@ public class DefaultCertificateValidator implements CertificateValidator {
           e);
     }
     if (certs.size() > 1) {
-      throw new IllegalArgumentException("The selector does not uniquely identify a certificate.");
+      throw new IllegalArgumentException("This selector does not uniquely identify a certificate:\n"
+                                         + selector.toString());
     } else if (certs.isEmpty()) {
-      throw new IllegalArgumentException("The selector did not identify any certificates.");
+      throw new IllegalArgumentException("This selector did not identify any certificates:\n"
+                                         + selector.toString());
     }
     return certs.iterator().next();
   }
