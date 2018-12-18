@@ -1,16 +1,19 @@
 package org.auspicacious.akman.lib.impl;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.CertSelector;
 import java.security.cert.X509CertSelector;
 import java.util.ArrayList;
 import java.util.List;
 import javax.security.auth.x500.X500Principal;
-import org.auspicacious.akman.lib.interfaces.CertificateDeserializer;
 import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
+import org.auspicacious.akman.lib.interfaces.CertificateDeserializer;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -72,11 +75,17 @@ public class DefaultCertificateValidatorTest {
   // or multiple certificates. Test a list with null entries.
 
   @Test
-  public void testValidate() throws IOException {
+  public void testValidate() throws Exception {
     final Path caDir = Path.of("src", "test", "resources", "certs",
                                "validclientcert-multifileca", "ca");
     final DefaultCertificateValidator validator = instantiateStandardValidator(caDir);
-    // validator.validate();
+    final Path clientCertPath = Path.of("src", "test", "resources", "certs",
+                                        "validclientcert-multifileca", "akmanclient1.crt");
+    final X509CertificateHolder clientCert;
+    try (Reader fileReader = Files.newBufferedReader(clientCertPath)) {
+      clientCert = new DefaultCertificateDeserializer().readPEMCertificates(fileReader).get(0);
+    }
+    // validator.validate(clientCert);
   }
 
   private DefaultCertificateValidator instantiateStandardValidator(List<Path> caFiles) {
