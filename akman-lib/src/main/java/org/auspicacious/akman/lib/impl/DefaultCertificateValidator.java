@@ -32,12 +32,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
+import org.auspicacious.akman.lib.interfaces.CertificateDeserializer;
 import org.auspicacious.akman.lib.interfaces.CertificateValidator;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.util.io.pem.PemObject;
-import org.bouncycastle.util.io.pem.PemReader;
 
 @Slf4j
 public class DefaultCertificateValidator implements CertificateValidator {
@@ -57,10 +56,11 @@ public class DefaultCertificateValidator implements CertificateValidator {
    */
   public DefaultCertificateValidator(final Collection<Path> caFilesOrDirs,
                                      final CertSelector trustRootSelector,
-                                     final CertSelector intermediateSelector) {
+                                     final CertSelector intermediateSelector,
+                                     final CertificateDeserializer certDeserializer) {
     final Collection<X509CertificateHolder> allCertificates = new ArrayList<>();
     for (final Path caFileOrDir : caFilesOrDirs) {
-      allCertificates.addAll(loadCAs(caFileOrDir));
+      allCertificates.addAll(loadCAs(caFileOrDir, certDeserializer));
     }
     this.certPath = createCertPath(allCertificates, trustRootSelector, intermediateSelector);
   }
@@ -79,8 +79,10 @@ public class DefaultCertificateValidator implements CertificateValidator {
    */
   public DefaultCertificateValidator(final Path caFileOrDir,
                                      final CertSelector trustRootSelector,
-                                     final CertSelector intermediateSelector) {
-    this.certPath = createCertPath(loadCAs(caFileOrDir), trustRootSelector, intermediateSelector);
+                                     final CertSelector intermediateSelector,
+                                     final CertificateDeserializer certDeserializer) {
+    this.certPath = createCertPath(loadCAs(caFileOrDir, certDeserializer),
+                                   trustRootSelector, intermediateSelector);
   }
 
   @SuppressWarnings("PMD.NullAssignment")
@@ -179,9 +181,10 @@ public class DefaultCertificateValidator implements CertificateValidator {
   }
     
   @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-  private static Collection<X509CertificateHolder> loadCAs(final Path caFileOrDir) {
+  private static Collection<X509CertificateHolder>
+      loadCAs(final Path caFileOrDir, final CertificateDeserializer certDeserializer) {
     if (Files.isRegularFile(caFileOrDir)) {
-      return loadCAFile(caFileOrDir);
+      return loadCAFile(caFileOrDir, certDeserializer);
     } else if (Files.isDirectory(caFileOrDir)) {
       final Collection<X509CertificateHolder> certs = new ArrayList<X509CertificateHolder>();
       final BiPredicate<Path, BasicFileAttributes> predicate = (path, attr) -> attr.isRegularFile();
@@ -193,7 +196,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
         // safety, because I'm not sure if the path stream can be
         // parallel
         for (final Path file : caFiles) {
-          certs.addAll(loadCAFile(file));
+          certs.addAll(loadCAFile(file, certDeserializer));
         }
       } catch (IOException e) {
         throw new AkmanRuntimeException("Problem accessing starting file for CA file search.", e);
@@ -206,26 +209,16 @@ public class DefaultCertificateValidator implements CertificateValidator {
     }
   }
 
-  private static Collection<X509CertificateHolder> loadCAFile(final Path caFile) {
+  private static Collection<X509CertificateHolder>
+      loadCAFile(final Path caFile, final CertificateDeserializer certDeserializer) {
     if (!Files.isRegularFile(caFile)) {
       throw new IllegalArgumentException(caFile.toString()
                                          + " is not a regular file and cannot be read.");
     }
-    final List<X509CertificateHolder> certHolderList = new ArrayList<>();
-    try (
-         Reader fileReader = Files.newBufferedReader(caFile);
-         PemReader pemReader = new PemReader(fileReader)
-         ) {
-      while (true) {
-        final PemObject pemObject = pemReader.readPemObject();
-        if (pemObject == null) {
-          break;
-        }
-        certHolderList.add(new X509CertificateHolder(pemObject.getContent()));
-      }
+    try (Reader fileReader = Files.newBufferedReader(caFile)) {
+      return certDeserializer.readPEMCertificates(fileReader);
     } catch (IOException e) {
       throw new AkmanRuntimeException("An error occurred while parsing the CA file.", e);
     }
-    return certHolderList;
   }
 }

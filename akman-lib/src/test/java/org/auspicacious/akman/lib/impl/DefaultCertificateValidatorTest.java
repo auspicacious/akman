@@ -9,6 +9,7 @@ import java.security.cert.X509CertSelector;
 import java.util.ArrayList;
 import java.util.List;
 import javax.security.auth.x500.X500Principal;
+import org.auspicacious.akman.lib.interfaces.CertificateDeserializer;
 import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
@@ -35,9 +36,7 @@ public class DefaultCertificateValidatorTest {
   public void testCollectionConstructorDirectoryOnly() throws Exception {
     final Path caDir = Path.of("src", "test", "resources", "certs",
                                "validclientcert-multifileca", "ca");
-    new DefaultCertificateValidator(caDir,
-                                    (X509CertSelector) trustRootSelector.clone(),
-                                    (X509CertSelector) intermediateSelector.clone());
+    final DefaultCertificateValidator validator = instantiateStandardValidator(caDir);
   }
 
   @Test
@@ -47,35 +46,26 @@ public class DefaultCertificateValidatorTest {
     final List<Path> caFiles = new ArrayList<>();
     caFiles.add(caDir.resolve("akmanrootca1.crt"));
     caFiles.add(caDir.resolve("akmansubca1.crt"));
-
-    new DefaultCertificateValidator(caFiles,
-                                    (X509CertSelector) trustRootSelector.clone(),
-                                    (X509CertSelector) intermediateSelector.clone());
+    final DefaultCertificateValidator validator = instantiateStandardValidator(caFiles);
   }
 
   @Test
   public void testSingleFileConstructor() throws Exception {
     final Path caFile = Path.of("src", "test", "resources", "certs",
                                 "validclientcert-singlefileca", "ca", "ca.crt");
-    new DefaultCertificateValidator(caFile,
-                                    (X509CertSelector) trustRootSelector.clone(),
-                                    (X509CertSelector) intermediateSelector.clone());
+    final DefaultCertificateValidator validator = instantiateStandardValidator(caFile);
   }
 
   @Test(expectedExceptions = { NullPointerException.class, })
   public void testNullFileConstructor() throws Exception {
     final Path caFile = null;
-    new DefaultCertificateValidator(caFile,
-                                    (X509CertSelector) trustRootSelector.clone(),
-                                    (X509CertSelector) intermediateSelector.clone());
+    final DefaultCertificateValidator validator = instantiateStandardValidator(caFile);
   }
 
   @Test(expectedExceptions = { NullPointerException.class, })
   public void testNullListConstructor() throws Exception {
     final List<Path> caFiles = null;
-    new DefaultCertificateValidator(caFiles,
-                                    (X509CertSelector) trustRootSelector.clone(),
-                                    (X509CertSelector) intermediateSelector.clone());
+    final DefaultCertificateValidator validator = instantiateStandardValidator(caFiles);
   }
 
   // TODO test null selectors as well as selectors that match nothing
@@ -85,8 +75,23 @@ public class DefaultCertificateValidatorTest {
   public void testValidate() throws IOException {
     final Path caDir = Path.of("src", "test", "resources", "certs",
                                "validclientcert-multifileca", "ca");
-    new DefaultCertificateValidator(caDir,
-                                    (X509CertSelector) trustRootSelector.clone(),
-                                    (X509CertSelector) intermediateSelector.clone());
+    final DefaultCertificateValidator validator = instantiateStandardValidator(caDir);
+    // validator.validate();
+  }
+
+  private DefaultCertificateValidator instantiateStandardValidator(List<Path> caFiles) {
+    final CertificateDeserializer certDeserializer = new DefaultCertificateDeserializer();
+    return new DefaultCertificateValidator(caFiles,
+                                           (X509CertSelector) trustRootSelector.clone(),
+                                           (X509CertSelector) intermediateSelector.clone(),
+                                           certDeserializer);
+  }
+
+  private DefaultCertificateValidator instantiateStandardValidator(Path caFile) {
+    final CertificateDeserializer certDeserializer = new DefaultCertificateDeserializer();
+    return new DefaultCertificateValidator(caFile,
+                                           (X509CertSelector) trustRootSelector.clone(),
+                                           (X509CertSelector) intermediateSelector.clone(),
+                                           certDeserializer);
   }
 }
