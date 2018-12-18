@@ -3,7 +3,6 @@ package org.auspicacious.akman.lib.impl;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -29,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
@@ -183,21 +183,27 @@ public class DefaultCertificateValidator implements CertificateValidator {
     if (Files.isRegularFile(caFileOrDir)) {
       return loadCAFile(caFileOrDir);
     } else if (Files.isDirectory(caFileOrDir)) {
+      final Collection<X509CertificateHolder> certs = new ArrayList<X509CertificateHolder>();
       final BiPredicate<Path, BasicFileAttributes> predicate = (path, attr) -> attr.isRegularFile();
       try (Stream<Path> caFileStream = Files.find(caFileOrDir,
                                                   Integer.MAX_VALUE,
-                                                  predicate,
-                                                  (FileVisitOption) null)) {
-        caFileStream.forEach(file -> loadCAFile(file));
+                                                  predicate)) {
+        final List<Path> caFiles = caFileStream.collect(Collectors.toUnmodifiableList());
+        // Using this approach instead of forEach to ensure thread
+        // safety, because I'm not sure if the path stream can be
+        // parallel
+        for (final Path file : caFiles) {
+          certs.addAll(loadCAFile(file));
+        }
       } catch (IOException e) {
         throw new AkmanRuntimeException("Problem accessing starting file for CA file search.", e);
       }
+      return certs;
     } else {
       throw new IllegalArgumentException(caFileOrDir.toString()
                                          + " is not a regular file or directory and cannot be read."
                                          );
     }
-    return null;
   }
 
   private static Collection<X509CertificateHolder> loadCAFile(final Path caFile) {

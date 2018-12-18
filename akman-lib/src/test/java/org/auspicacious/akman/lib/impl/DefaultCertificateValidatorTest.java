@@ -17,7 +17,20 @@ public class DefaultCertificateValidatorTest {
   public void setupEnvironment() {
     new EnvironmentVerifierImpl().verify();
   }
-    
+
+  @Test
+  public void testCollectionConstructorDirectoryOnly() throws Exception {
+    final Path caDir = Path.of("src", "test", "resources", "certs",
+                               "validclientcert-multifileca", "ca");
+
+    final X509CertSelector trustRootSelector = new X509CertSelector();
+    trustRootSelector.addSubjectAlternativeName(1, "akmanrootca1@akman.auspicacious.org");
+    final X509CertSelector intermediateSelector = new X509CertSelector();
+    intermediateSelector.addSubjectAlternativeName(1, "akmansubca1@akman.auspicacious.org");
+
+    new DefaultCertificateValidator(caDir, trustRootSelector, intermediateSelector);
+  }
+
   @Test
   public void testCollectionConstructorFilesOnly() throws Exception {
     final Path caDir = Path.of("src", "test", "resources", "certs",
@@ -46,4 +59,29 @@ public class DefaultCertificateValidatorTest {
 
     new DefaultCertificateValidator(caFile, trustRootSelector, intermediateSelector);
   }
+
+  @Test(expectedExceptions = { NullPointerException.class, })
+  public void testNullFileConstructor() throws Exception {
+    final Path caFile = null;
+    final X509CertSelector trustRootSelector = new X509CertSelector();
+    trustRootSelector.addSubjectAlternativeName(1, "akmanrootca1@akman.auspicacious.org");
+    final X509CertSelector intermediateSelector = new X509CertSelector();
+    intermediateSelector.addSubjectAlternativeName(1, "akmansubca1@akman.auspicacious.org");
+
+    new DefaultCertificateValidator(caFile, trustRootSelector, intermediateSelector);
+  }
+
+  @Test(expectedExceptions = { NullPointerException.class, })
+  public void testNullListConstructor() throws Exception {
+    final List<Path> caFiles = null;
+    final X509CertSelector trustRootSelector = new X509CertSelector();
+    trustRootSelector.addSubjectAlternativeName(1, "akmanrootca1@akman.auspicacious.org");
+    final X509CertSelector intermediateSelector = new X509CertSelector();
+    intermediateSelector.addSubjectAlternativeName(1, "akmansubca1@akman.auspicacious.org");
+
+    new DefaultCertificateValidator(caFiles, trustRootSelector, intermediateSelector);
+  }
+
+  // TODO test null selectors as well as selectors that match nothing
+  // or multiple certificates
 }
