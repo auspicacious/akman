@@ -85,7 +85,7 @@ public class DefaultCertificateValidatorTest {
     try (Reader fileReader = Files.newBufferedReader(clientCertPath)) {
       clientCert = new DefaultCertificateDeserializer().readPEMCertificates(fileReader).get(0);
     }
-    // validator.validate(clientCert);
+    Assert.assertTrue(validator.validate(clientCert));
   }
 
   private DefaultCertificateValidator instantiateStandardValidator(List<Path> caFiles) {
