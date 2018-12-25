@@ -21,6 +21,7 @@ import java.security.cert.CertStoreException;
 import java.security.cert.CertStoreParameters;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.PKIXBuilderParameters;
 import java.security.cert.PKIXCertPathValidatorResult;
@@ -117,6 +118,14 @@ public class DefaultCertificateValidator implements CertificateValidator {
     certStoreList.addAll(this.certPath.getCertificates());
     final CertStoreParameters certStoreParams = new CollectionCertStoreParameters(certStoreList);
 
+    final CertPath clientPath;
+    try {
+      final CertificateFactory certFactory = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
+      clientPath = certFactory.generateCertPath(certStoreList);
+    } catch (final NoSuchProviderException|CertificateException e) {
+      throw new AkmanRuntimeException("Problem generating unvalidated certificate path.", e);
+    }
+
     final CertPathValidator cpValidator;
     final PKIXParameters pkixParams;
     final CertStore certStore;
@@ -135,16 +144,18 @@ public class DefaultCertificateValidator implements CertificateValidator {
     final X509CertSelector targetSelector = new X509CertSelector();
     targetSelector.setCertificate(jcaCert);
     pkixParams.setTargetCertConstraints(targetSelector);
+    pkixParams.setRevocationEnabled(false); // TODO willneed to check revocation
     final PKIXCertPathValidatorResult validatorResult;
     try {
       validatorResult =
-        (PKIXCertPathValidatorResult) cpValidator.validate(this.certPath, pkixParams);
+        (PKIXCertPathValidatorResult) cpValidator.validate(clientPath, pkixParams);
     } catch (InvalidAlgorithmParameterException e) {
       throw new AkmanRuntimeException("CertPathValidator misconfiguration, should have been caught in testing", e);
     } catch (CertPathValidatorException e) {
+      log.debug("Certificate path did not validate.", e);
       return false;
     }
-    log.debug(validatorResult.toString());
+    log.debug("validator result: {}", validatorResult);
     return true;
   }
 
@@ -206,6 +217,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
     }
 
     log.debug("certificate path: {}", certPath);
+    // TODO validate cert path (unclear if CertPathBuilder does this fully)
     return certPath;
   }
 
