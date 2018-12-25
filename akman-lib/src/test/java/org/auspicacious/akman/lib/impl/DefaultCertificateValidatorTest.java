@@ -1,19 +1,23 @@
 package org.auspicacious.akman.lib.impl;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.NoSuchProviderException;
 import java.security.cert.CertSelector;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509CertSelector;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import javax.security.auth.x500.X500Principal;
 import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
 import org.auspicacious.akman.lib.interfaces.CertificateDeserializer;
-import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -29,6 +33,15 @@ public class DefaultCertificateValidatorTest {
       throw new AkmanRuntimeException("There was a problem creating the certificate selectors.", e);
     }
   }
+
+  private static final ThreadLocal<CertificateFactory> certFactory =
+    ThreadLocal.withInitial(() -> {
+        try {
+          return CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
+        } catch (final NoSuchProviderException|CertificateException e) {
+          throw new AkmanRuntimeException("Problem creating a new CertificateFactory instance.", e);
+        }
+      });
 
   @BeforeSuite
   public void setupEnvironment() {
@@ -81,9 +94,9 @@ public class DefaultCertificateValidatorTest {
     final DefaultCertificateValidator validator = instantiateStandardValidator(caDir);
     final Path clientCertPath = Path.of("src", "test", "resources", "certs",
                                         "validclientcert-multifileca", "akmanclient1.crt");
-    final X509CertificateHolder clientCert;
-    try (Reader fileReader = Files.newBufferedReader(clientCertPath)) {
-      clientCert = new DefaultCertificateDeserializer().readPEMCertificates(fileReader).get(0);
+    final X509Certificate clientCert;
+    try (InputStream fileStream = Files.newInputStream(clientCertPath)) {
+      clientCert = (X509Certificate) certFactory.get().generateCertificate(fileStream);
     }
     Assert.assertTrue(validator.validate(clientCert));
   }

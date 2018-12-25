@@ -1,6 +1,6 @@
 package org.auspicacious.akman.lib.interfaces;
 
-import org.bouncycastle.cert.X509CertificateHolder;
+import java.security.cert.X509Certificate;
 
 /**
  * Interface for classes that certify a certificate as valid. The
@@ -13,5 +13,5 @@ public interface CertificateValidator {
    * @return true, if the certificate is valid according to the rules
    *     of the validator in use. Otherwise false.
    */
-  boolean validate(X509CertificateHolder cert);
+  boolean validate(X509Certificate cert);
 }
