@@ -46,8 +46,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Slf4j
 public class DefaultCertificateValidator implements CertificateValidator {
-  private final CertPath certPath;
-  private final Set<TrustAnchor> trustAnchors;
+  private final X509Certificate subCACert;
+  private final Set<TrustAnchor> subCATrustAnchor;
 
   private static final ThreadLocal<CertificateFactory> certFactory =
     ThreadLocal.withInitial(() -> {
@@ -78,8 +78,11 @@ public class DefaultCertificateValidator implements CertificateValidator {
     for (final Path caFileOrDir : caFilesOrDirs) {
       allCertificates.addAll(loadCAs(caFileOrDir, certDeserializer));
     }
-    this.trustAnchors = createTrustAnchors(allCertificates, trustRootSelector);
-    this.certPath = createCertPath(allCertificates, this.trustAnchors, intermediateSelector);
+    final CertStore allCertsStore = createCertStore(allCertificates);
+    final Set<TrustAnchor> rootTrustAnchor = createTrustAnchor(allCertsStore, trustRootSelector);
+    validateCertPath(allCertsStore, rootTrustAnchor, intermediateSelector);
+    this.subCATrustAnchor = createTrustAnchor(allCertsStore, intermediateSelector);
+    this.subCACert = this.subCATrustAnchor.iterator().next().getTrustedCert();
   }
 
   /**
@@ -98,46 +101,48 @@ public class DefaultCertificateValidator implements CertificateValidator {
                                      final CertSelector trustRootSelector,
                                      final CertSelector intermediateSelector,
                                      final CertificateDeserializer certDeserializer) {
-    Collection<X509Certificate> allCertificates = loadCAs(caFileOrDir, certDeserializer);
-    this.trustAnchors = createTrustAnchors(allCertificates, trustRootSelector);
-    this.certPath = createCertPath(allCertificates, this.trustAnchors, intermediateSelector);
+    final Collection<X509Certificate> allCertificates = loadCAs(caFileOrDir, certDeserializer);
+    final CertStore allCertsStore = createCertStore(allCertificates);    
+    final Set<TrustAnchor> rootTrustAnchor = createTrustAnchor(allCertsStore, trustRootSelector);
+    validateCertPath(allCertsStore, rootTrustAnchor, intermediateSelector);
+    this.subCATrustAnchor = createTrustAnchor(allCertsStore, intermediateSelector);
+    this.subCACert = this.subCATrustAnchor.iterator().next().getTrustedCert();
   }
 
   @SuppressWarnings("PMD.NullAssignment")
   private DefaultCertificateValidator() {
-    this.certPath = null;
-    this.trustAnchors = null;
+    this.subCATrustAnchor = null;
+    this.subCACert = null;
   }
   
   @Override
   public boolean validate(final X509Certificate cert) {
-    final List<Certificate> certStoreList = new ArrayList<>();
-    certStoreList.add(cert);
-    certStoreList.addAll(this.certPath.getCertificates());
-    final CertStoreParameters certStoreParams = new CollectionCertStoreParameters(certStoreList);
+    return validate(cert, this.subCACert, this.subCATrustAnchor);
+  }
 
+  private static boolean validate(final X509Certificate cert,
+                                  final X509Certificate trustRoot,
+                                  final Set<TrustAnchor> trustAnchor) {
     final CertPath clientPath;
     try {
-      clientPath = certFactory.get().generateCertPath(certStoreList);
+      clientPath = certFactory.get().generateCertPath(List.of(cert));
     } catch (final CertificateException e) {
       throw new AkmanRuntimeException("Problem generating unvalidated certificate path.", e);
     }
 
     final CertPathValidator cpValidator;
     final PKIXParameters pkixParams;
-    final CertStore certStore;
     try {
       cpValidator = CertPathValidator.getInstance("PKIX",
                                                   BouncyCastleProvider.PROVIDER_NAME);
-      pkixParams = new PKIXParameters(this.trustAnchors);
-      certStore = CertStore.getInstance("Collection", certStoreParams,
-                                        BouncyCastleProvider.PROVIDER_NAME);
+      pkixParams = new PKIXParameters(trustAnchor);
     } catch (final InvalidAlgorithmParameterException|NoSuchAlgorithmException|NoSuchProviderException e) {
       throw new AkmanRuntimeException(
           "Problem creating JCA objects. Most likely Bouncy Castle was not initialized properly.",
           e);
     }
     pkixParams.setRevocationEnabled(false); // TODO will need to check revocation
+
     final PKIXCertPathValidatorResult validatorResult;
     try {
       validatorResult =
@@ -152,9 +157,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
     return true;
   }
 
-  private static Set<TrustAnchor> createTrustAnchors(
-      final Collection<X509Certificate> certs,
-      final CertSelector trustRootSelector) {
+  private static CertStore createCertStore(final Collection<X509Certificate> certs) {
     final CertStore certStore;
     try {
       certStore = CertStore.getInstance("Collection",
@@ -164,24 +167,19 @@ public class DefaultCertificateValidator implements CertificateValidator {
       throw new AkmanRuntimeException(
           "Problem creating a CertStore. Most likely a problem in the JDK configuration.", e);
     }
-    final X509Certificate trustRoot = findCertificate(certStore, trustRootSelector);
-
-    return Set.of(new TrustAnchor(trustRoot, null));
+    return certStore;
   }
 
-  private static CertPath createCertPath(final Collection<X509Certificate> certs,
-                                         final Set<TrustAnchor> trustAnchors,
-                                         final CertSelector intermediateSelector) {
-    final CertStore certStore;
-    try {
-      certStore = CertStore.getInstance("Collection",
-                                        new CollectionCertStoreParameters(certs),
-                                        BouncyCastleProvider.PROVIDER_NAME);
-    } catch (final GeneralSecurityException e) {
-      throw new AkmanRuntimeException(
-          "Problem creating a CertStore. Most likely a problem in the JDK configuration.", e);
-    }
+  private static Set<TrustAnchor> createTrustAnchor(
+      final CertStore certStore,
+      final CertSelector selector) {
+    final X509Certificate rootCert = findCertificate(certStore, selector);
+    return Set.of(new TrustAnchor(rootCert, null)); // TODO signing constraints
+  }
 
+  private static CertPath validateCertPath(final CertStore certStore,
+                                           final Set<TrustAnchor> trustAnchors,
+                                           final CertSelector intermediateSelector) {
     final PKIXBuilderParameters params;
     try {
       params = new PKIXBuilderParameters(trustAnchors, intermediateSelector);
@@ -208,7 +206,11 @@ public class DefaultCertificateValidator implements CertificateValidator {
     }
 
     log.debug("certificate path: {}", certPath);
-    // TODO validate cert path (unclear if CertPathBuilder does this fully)
+    if (! validate((X509Certificate) certPath.getCertificates().iterator().next(),
+                   trustAnchors.iterator().next().getTrustedCert(),
+                   trustAnchors)) {
+        throw new AkmanRuntimeException("Could not validate the root certificate path.");
+    }
     return certPath;
   }
 
