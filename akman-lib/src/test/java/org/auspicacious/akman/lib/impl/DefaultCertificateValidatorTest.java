@@ -44,7 +44,7 @@ public class DefaultCertificateValidatorTest {
 
   @BeforeSuite
   public void setupEnvironment() {
-    new EnvironmentVerifierImpl().verify();
+    BouncyCastleInitializer.initialize();
   }
 
   @Test

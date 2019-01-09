@@ -3,29 +3,52 @@ package org.auspicacious.akman.lib.impl;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.crypto.Cipher;
 import lombok.extern.slf4j.Slf4j;
+import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Slf4j
-public class EnvironmentVerifierImpl {
+public final class BouncyCastleInitializer {
+  private static final AtomicInteger INVOCATION_COUNT = new AtomicInteger(0);
   private static final int MIN_AES_STRENGTH = 256;
 
+  private BouncyCastleInitializer() {
+  }
+
   /**
-   * Verify that the JVM environment is sufficient for running this
-   * application. Should only be executed once at startup.
-   *
-   * @return true if the environment is capable, false otherwise.
+   * Only run this method once per JVM. It will validate that your JVM
+   * can support the encryption operations necessary for this
+   * application and add the Bouncy Castle encryption provider.
    */
-  @SuppressWarnings("checkstyle:multiplestringliterals")
-  public boolean verify() {
-    // https://wiki.apache.org/commons/Logging/StaticLog
-    // TODO this shouldn't be called a verifier if it has side effects
+  @SuppressWarnings("PMD.AvoidSynchronizedAtMethodLevel")
+  public static synchronized void initialize() {
+    try {
+      if (Cipher.getMaxAllowedKeyLength("AES") < MIN_AES_STRENGTH) {
+        throw new AkmanRuntimeException(
+          "Cannot use this JVM as it does not have sufficient encryption strength available. "
+          + "Try searching for instructions on how to apply an unlimited encryption strength "
+          + "policy.");
+      }
+    } catch (NoSuchAlgorithmException e) {
+      throw new AkmanRuntimeException(
+        "Tried to check the strength of the AES encryption "
+        + " algorithm, but it does not seem to be available in this JVM!", e);
+    }
 
     if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
       Security.addProvider(new BouncyCastleProvider());
     }
 
+    if (INVOCATION_COUNT.getAndIncrement() == 0
+        && System.getProperty("akman.logCryptoDebugInfo") != null) {
+      logDebugInfo();
+    }
+  }
+
+  @SuppressWarnings("checkstyle:multiplestringliterals")
+  private static void logDebugInfo() {
     final StringBuilder s = new StringBuilder();
     for (final Provider provider : Security.getProviders()) {
       s.append(provider.getName());
@@ -58,11 +81,5 @@ public class EnvironmentVerifierImpl {
       }
     }
     log.info(s.toString());
-
-    try {
-      return Cipher.getMaxAllowedKeyLength("AES") >= MIN_AES_STRENGTH;
-    } catch (NoSuchAlgorithmException e) {
-      return false;
-    }
   }
 }
