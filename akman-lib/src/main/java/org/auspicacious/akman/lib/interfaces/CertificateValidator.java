@@ -9,9 +9,6 @@ import java.security.cert.X509Certificate;
 public interface CertificateValidator {
   /**
    * Indicate whether the given certificate is considered valid.
-   *
-   * @return true, if the certificate is valid according to the rules
-   *     of the validator in use. Otherwise false.
    */
-  boolean validate(X509Certificate cert);
+  void validate(X509Certificate cert);
 }

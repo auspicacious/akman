@@ -1,8 +1,8 @@
 package org.auspicacious.akman.lib.impl;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -18,8 +18,6 @@ import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertSelector;
 import java.security.cert.CertStore;
 import java.security.cert.CertStoreException;
-import java.security.cert.CertStoreParameters;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CollectionCertStoreParameters;
@@ -27,12 +25,9 @@ import java.security.cert.PKIXBuilderParameters;
 import java.security.cert.PKIXCertPathValidatorResult;
 import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
-import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -40,23 +35,22 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
-import org.auspicacious.akman.lib.interfaces.CertificateDeserializer;
 import org.auspicacious.akman.lib.interfaces.CertificateValidator;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 @Slf4j
 public class DefaultCertificateValidator implements CertificateValidator {
-  private final X509Certificate subCACert;
-  private final Set<TrustAnchor> subCATrustAnchor;
-
-  private static final ThreadLocal<CertificateFactory> certFactory =
-    ThreadLocal.withInitial(() -> {
+  private static final ThreadLocal<CertificateFactory> CERT_FACTORY =
+      ThreadLocal.withInitial(() -> {
         try {
           return CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
-        } catch (final NoSuchProviderException|CertificateException e) {
+        } catch (final NoSuchProviderException | CertificateException e) {
           throw new AkmanRuntimeException("Problem creating a new CertificateFactory instance.", e);
         }
       });
+  private static final String CERT_PATH_BUILDER_ALGORITHM = "PKIX";
+
+  private final Set<TrustAnchor> subCATrustAnchor;
 
   /**
    * Initialize the validator and construct a certificate path that
@@ -72,17 +66,15 @@ public class DefaultCertificateValidator implements CertificateValidator {
    */
   public DefaultCertificateValidator(final Collection<Path> caFilesOrDirs,
                                      final CertSelector trustRootSelector,
-                                     final CertSelector intermediateSelector,
-                                     final CertificateDeserializer certDeserializer) {
+                                     final CertSelector intermediateSelector) {
     final Collection<X509Certificate> allCertificates = new ArrayList<>();
     for (final Path caFileOrDir : caFilesOrDirs) {
-      allCertificates.addAll(loadCAs(caFileOrDir, certDeserializer));
+      allCertificates.addAll(loadCAs(caFileOrDir));
     }
     final CertStore allCertsStore = createCertStore(allCertificates);
     final Set<TrustAnchor> rootTrustAnchor = createTrustAnchor(allCertsStore, trustRootSelector);
     validateCertPath(allCertsStore, rootTrustAnchor, intermediateSelector);
     this.subCATrustAnchor = createTrustAnchor(allCertsStore, intermediateSelector);
-    this.subCACert = this.subCATrustAnchor.iterator().next().getTrustedCert();
   }
 
   /**
@@ -99,33 +91,29 @@ public class DefaultCertificateValidator implements CertificateValidator {
    */
   public DefaultCertificateValidator(final Path caFileOrDir,
                                      final CertSelector trustRootSelector,
-                                     final CertSelector intermediateSelector,
-                                     final CertificateDeserializer certDeserializer) {
-    final Collection<X509Certificate> allCertificates = loadCAs(caFileOrDir, certDeserializer);
+                                     final CertSelector intermediateSelector) {
+    final Collection<X509Certificate> allCertificates = loadCAs(caFileOrDir);
     final CertStore allCertsStore = createCertStore(allCertificates);    
     final Set<TrustAnchor> rootTrustAnchor = createTrustAnchor(allCertsStore, trustRootSelector);
     validateCertPath(allCertsStore, rootTrustAnchor, intermediateSelector);
     this.subCATrustAnchor = createTrustAnchor(allCertsStore, intermediateSelector);
-    this.subCACert = this.subCATrustAnchor.iterator().next().getTrustedCert();
   }
 
   @SuppressWarnings("PMD.NullAssignment")
   private DefaultCertificateValidator() {
     this.subCATrustAnchor = null;
-    this.subCACert = null;
   }
   
   @Override
-  public boolean validate(final X509Certificate cert) {
-    return validate(cert, this.subCACert, this.subCATrustAnchor);
+  public void validate(final X509Certificate cert) {
+    validateInternal(cert, this.subCATrustAnchor);
   }
 
-  private static boolean validate(final X509Certificate cert,
-                                  final X509Certificate trustRoot,
-                                  final Set<TrustAnchor> trustAnchor) {
+  private static void validateInternal(final X509Certificate cert,
+                                       final Set<TrustAnchor> trustAnchor) {
     final CertPath clientPath;
     try {
-      clientPath = certFactory.get().generateCertPath(List.of(cert));
+      clientPath = CERT_FACTORY.get().generateCertPath(List.of(cert));
     } catch (final CertificateException e) {
       throw new AkmanRuntimeException("Problem generating unvalidated certificate path.", e);
     }
@@ -133,10 +121,12 @@ public class DefaultCertificateValidator implements CertificateValidator {
     final CertPathValidator cpValidator;
     final PKIXParameters pkixParams;
     try {
-      cpValidator = CertPathValidator.getInstance("PKIX",
+      cpValidator = CertPathValidator.getInstance(CERT_PATH_BUILDER_ALGORITHM,
                                                   BouncyCastleProvider.PROVIDER_NAME);
       pkixParams = new PKIXParameters(trustAnchor);
-    } catch (final InvalidAlgorithmParameterException|NoSuchAlgorithmException|NoSuchProviderException e) {
+    } catch (final InvalidAlgorithmParameterException
+             | NoSuchAlgorithmException
+             | NoSuchProviderException e) {
       throw new AkmanRuntimeException(
           "Problem creating JCA objects. Most likely Bouncy Castle was not initialized properly.",
           e);
@@ -148,13 +138,14 @@ public class DefaultCertificateValidator implements CertificateValidator {
       validatorResult =
         (PKIXCertPathValidatorResult) cpValidator.validate(clientPath, pkixParams);
     } catch (InvalidAlgorithmParameterException e) {
-      throw new AkmanRuntimeException("CertPathValidator misconfiguration, should have been caught in testing", e);
+      throw new AkmanRuntimeException(
+        "CertPathValidator misconfiguration, should have been caught in testing", e);
     } catch (CertPathValidatorException e) {
-      log.debug("Certificate path did not validate.", e);
-      return false;
+      log.debug("Validation error:", e);
+      // TODO this should be a checked exception
+      throw new AkmanRuntimeException("Certificate path did not validate.", e);
     }
     log.debug("validator result: {}", validatorResult);
-    return true;
   }
 
   private static CertStore createCertStore(final Collection<X509Certificate> certs) {
@@ -193,7 +184,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
 
     final CertPath certPath;
     try {
-      certPath = CertPathBuilder.getInstance("PKIX",
+      certPath = CertPathBuilder.getInstance(CERT_PATH_BUILDER_ALGORITHM,
                                              BouncyCastleProvider.PROVIDER_NAME)
         .build(params).getCertPath();
     } catch (CertPathBuilderException e) {
@@ -206,11 +197,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
     }
 
     log.debug("certificate path: {}", certPath);
-    if (! validate((X509Certificate) certPath.getCertificates().iterator().next(),
-                   trustAnchors.iterator().next().getTrustedCert(),
-                   trustAnchors)) {
-        throw new AkmanRuntimeException("Could not validate the root certificate path.");
-    }
+    validateInternal((X509Certificate) certPath.getCertificates().get(0), trustAnchors);
     return certPath;
   }
 
@@ -236,10 +223,9 @@ public class DefaultCertificateValidator implements CertificateValidator {
   }
     
   @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-  private static Collection<X509Certificate>
-      loadCAs(final Path caFileOrDir, final CertificateDeserializer certDeserializer) {
+  private static Collection<X509Certificate> loadCAs(final Path caFileOrDir) {
     if (Files.isRegularFile(caFileOrDir)) {
-      return loadCAFile(caFileOrDir, certDeserializer);
+      return loadCAFile(caFileOrDir);
     } else if (Files.isDirectory(caFileOrDir)) {
       final Collection<X509Certificate> certs = new ArrayList<X509Certificate>();
       final BiPredicate<Path, BasicFileAttributes> predicate = (path, attr) -> attr.isRegularFile();
@@ -251,7 +237,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
         // safety, because I'm not sure if the path stream can be
         // parallel
         for (final Path file : caFiles) {
-          certs.addAll(loadCAFile(file, certDeserializer));
+          certs.addAll(loadCAFile(file));
         }
       } catch (IOException e) {
         throw new AkmanRuntimeException("Problem accessing starting file for CA file search.", e);
@@ -266,14 +252,14 @@ public class DefaultCertificateValidator implements CertificateValidator {
 
   @SuppressWarnings("unchecked")
   private static Collection<X509Certificate>
-      loadCAFile(final Path caFile, final CertificateDeserializer certDeserializer) {
+      loadCAFile(final Path caFile) {
     if (!Files.isRegularFile(caFile)) {
       throw new IllegalArgumentException(caFile.toString()
                                          + " is not a regular file and cannot be read.");
     }
     try (InputStream fileStream = Files.newInputStream(caFile)) {
-      return (Collection<X509Certificate>) certFactory.get().generateCertificates(fileStream);
-    } catch (CertificateException|IOException e) {
+      return (Collection<X509Certificate>) CERT_FACTORY.get().generateCertificates(fileStream);
+    } catch (CertificateException | IOException e) {
       throw new AkmanRuntimeException("An error occurred while parsing the CA file.", e);
     }
   }

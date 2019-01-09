@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.security.auth.x500.X500Principal;
 import org.auspicacious.akman.lib.exceptions.AkmanRuntimeException;
-import org.auspicacious.akman.lib.interfaces.CertificateDeserializer;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.testng.Assert;
 import org.testng.annotations.BeforeSuite;
@@ -98,22 +97,18 @@ public class DefaultCertificateValidatorTest {
     try (InputStream fileStream = Files.newInputStream(clientCertPath)) {
       clientCert = (X509Certificate) certFactory.get().generateCertificate(fileStream);
     }
-    Assert.assertTrue(validator.validate(clientCert));
+    validator.validate(clientCert);
   }
 
   private DefaultCertificateValidator instantiateStandardValidator(List<Path> caFiles) {
-    final CertificateDeserializer certDeserializer = new DefaultCertificateDeserializer();
     return new DefaultCertificateValidator(caFiles,
                                            (X509CertSelector) trustRootSelector.clone(),
-                                           (X509CertSelector) intermediateSelector.clone(),
-                                           certDeserializer);
+                                           (X509CertSelector) intermediateSelector.clone());
   }
 
   private DefaultCertificateValidator instantiateStandardValidator(Path caFile) {
-    final CertificateDeserializer certDeserializer = new DefaultCertificateDeserializer();
     return new DefaultCertificateValidator(caFile,
                                            (X509CertSelector) trustRootSelector.clone(),
-                                           (X509CertSelector) intermediateSelector.clone(),
-                                           certDeserializer);
+                                           (X509CertSelector) intermediateSelector.clone());
   }
 }
