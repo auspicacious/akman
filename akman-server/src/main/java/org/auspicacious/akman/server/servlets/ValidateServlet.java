@@ -2,7 +2,6 @@ package org.auspicacious.akman.server.servlets;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -55,7 +54,7 @@ public class ValidateServlet extends HttpServlet {
     validator.validate(cert);
 
     try (ServletOutputStream out = response.getOutputStream()) {
-      out.write("true".getBytes(StandardCharsets.UTF_8));
+      out.print("true");
     }
   }
 }
