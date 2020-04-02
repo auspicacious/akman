@@ -43,15 +43,6 @@ public class ValidateServletTest {
     }
   }
 
-  private static final ThreadLocal<CertificateFactory> certFactory =
-    ThreadLocal.withInitial(() -> {
-        try {
-          return CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
-        } catch (final NoSuchProviderException|CertificateException e) {
-          throw new AkmanRuntimeException("Problem creating a new CertificateFactory instance.", e);
-        }
-      });
-
   @Test
   public void testCollectionConstructorDirectoryOnly() throws Exception {
     // TODO of course, should use mocks for a unit test. Should also

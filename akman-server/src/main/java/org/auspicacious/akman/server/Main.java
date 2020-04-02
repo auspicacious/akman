@@ -33,7 +33,7 @@ public final class Main {
     tomcat.getConnector();
     tomcat.setPort(8080);
     tomcat.addContext("/api", tomcatDir.toAbsolutePath().toString())
-      .addApplicationListener("org.auspicacious.akman.server.AkmanServletContextListener");
+        .addApplicationListener("org.auspicacious.akman.server.AkmanServletContextListener");
     tomcat.start();
 
     try {

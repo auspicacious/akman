@@ -17,7 +17,6 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.60</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -32,7 +31,6 @@
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
-      <version>6.14.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -45,7 +43,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.2</version>
+      <version>1.18.12</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

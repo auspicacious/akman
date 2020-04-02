@@ -51,7 +51,7 @@ public class DefaultCertificateValidatorTest {
   public void testCollectionConstructorDirectoryOnly() throws Exception {
     final Path caDir = Path.of("src", "test", "resources", "certs",
                                "validclientcert-multifileca", "ca");
-    final DefaultCertificateValidator validator = instantiateStandardValidator(caDir);
+    instantiateStandardValidator(caDir);
   }
 
   @Test
@@ -61,26 +61,26 @@ public class DefaultCertificateValidatorTest {
     final List<Path> caFiles = new ArrayList<>();
     caFiles.add(caDir.resolve("akmanrootca1.crt"));
     caFiles.add(caDir.resolve("akmansubca1.crt"));
-    final DefaultCertificateValidator validator = instantiateStandardValidator(caFiles);
+    instantiateStandardValidator(caFiles);
   }
 
   @Test
   public void testSingleFileConstructor() throws Exception {
     final Path caFile = Path.of("src", "test", "resources", "certs",
                                 "validclientcert-singlefileca", "ca", "ca.crt");
-    final DefaultCertificateValidator validator = instantiateStandardValidator(caFile);
+    instantiateStandardValidator(caFile);
   }
 
   @Test(expectedExceptions = { NullPointerException.class, })
   public void testNullFileConstructor() throws Exception {
     final Path caFile = null;
-    final DefaultCertificateValidator validator = instantiateStandardValidator(caFile);
+    instantiateStandardValidator(caFile);
   }
 
   @Test(expectedExceptions = { NullPointerException.class, })
   public void testNullListConstructor() throws Exception {
     final List<Path> caFiles = null;
-    final DefaultCertificateValidator validator = instantiateStandardValidator(caFiles);
+    instantiateStandardValidator(caFiles);
   }
 
   // TODO test null selectors as well as selectors that match nothing

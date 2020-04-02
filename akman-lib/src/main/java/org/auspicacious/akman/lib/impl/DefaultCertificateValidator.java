@@ -227,7 +227,7 @@ public class DefaultCertificateValidator implements CertificateValidator {
     if (Files.isRegularFile(caFileOrDir)) {
       return loadCAFile(caFileOrDir);
     } else if (Files.isDirectory(caFileOrDir)) {
-      final Collection<X509Certificate> certs = new ArrayList<X509Certificate>();
+      final Collection<X509Certificate> certs = new ArrayList<>();
       final BiPredicate<Path, BasicFileAttributes> predicate = (path, attr) -> attr.isRegularFile();
       try (Stream<Path> caFileStream = Files.find(caFileOrDir,
                                                   Integer.MAX_VALUE,
