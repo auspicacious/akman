@@ -14,7 +14,7 @@
   <name>org.auspicacious.akman:akman-server</name>
 
   <properties>
-    <tomcat.version>9.0.35</tomcat.version>
+    <tomcat.version>9.0.41</tomcat.version>
   </properties>
 
   <dependencies>
