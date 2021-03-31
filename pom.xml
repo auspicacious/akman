@@ -45,7 +45,7 @@ Sections that did not require modification or management have been removed. Much
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>28.2-jre</version>
+        <version>29.0-jre</version>
       </dependency>
       <dependency>
         <groupId>org.testng</groupId>
